@@ -21,12 +21,17 @@ type Log struct {
 	IsOutputStd bool         `yaml:"IsOutputStd"` //是否输出到终端
 }
 
+type Sync struct {
+	Path string `yaml:"Path"`
+}
+
 type Config struct {
 	System System `yaml:"System"`
 	Log    Log    `yaml:"Log"`
+	Sync   Sync   `yaml:"Sync"`
 }
 
-var configPath = filepath.Join(comm.Pwd(), "config", "config.yml")
+var configPath = filepath.Join(comm.Pwd(), "data", "config.yml")
 var configBackPath = configPath + ".back"
 
 func (c *Config) initConfig() error {

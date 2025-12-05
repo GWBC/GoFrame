@@ -19,7 +19,7 @@ type Log struct {
 
 func (l *Log) Write(p []byte) (n int, err error) {
 	if l.isOutputStd {
-		fmt.Println(string(p))
+		fmt.Print(string(p))
 	}
 
 	return l.wirter.Write(p)

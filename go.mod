@@ -3,6 +3,7 @@ module GoFrame
 go 1.24.5
 
 require (
+	github.com/fsnotify/fsnotify v1.9.0
 	github.com/kardianos/service v1.2.4
 	github.com/sirupsen/logrus v1.9.3
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1

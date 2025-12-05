@@ -7,7 +7,8 @@ import (
 )
 
 var serviceList = []Service{
-	&TestService{},
+	&ScanService{},
+	&ListenService{},
 }
 
 var serviceGroup = sync.WaitGroup{}
@@ -25,7 +26,7 @@ func Start() error {
 	for _, svr := range serviceList {
 		err := svr.Init()
 		if err != nil {
-			log.Sys.Errorf("服务：%s 初始化失败，错误原因：%s", svr.Name(), err.Error())
+			log.Sys.Errorf("%s服务初始化失败，错误原因：%s", svr.Name(), err.Error())
 			return err
 		}
 	}
@@ -34,12 +35,12 @@ func Start() error {
 		serviceGroup.Add(1)
 
 		go func(svr Service) {
-			log.Sys.Infof("服务：%s 启动", svr.Name())
+			log.Sys.Infof("%s服务启动", svr.Name())
 
 			subMsg := map[int]int{}
 
 			defer func() {
-				log.Sys.Infof("服务：%s 退出", svr.Name())
+				log.Sys.Infof("%s服务退出", svr.Name())
 				for msgID, subID := range subMsg {
 					message.Unsub(msgID, subID)
 				}

@@ -7,9 +7,7 @@ import (
 	"time"
 )
 
-var timers = []Timer{
-	&TestTimer{},
-}
+var timers = []Timer{}
 
 var timerGroup = sync.WaitGroup{}
 var timerCtx, timerCancelFun = context.WithCancel(context.Background())

@@ -1,0 +1,95 @@
+package service
+
+import (
+	"GoFrame/src/components/comm"
+	"GoFrame/src/components/config"
+	"GoFrame/src/components/db"
+	"GoFrame/src/components/log"
+	"errors"
+	"io/fs"
+	"path/filepath"
+	"sync"
+	"time"
+
+	"gorm.io/gorm/clause"
+)
+
+type ScanService struct {
+	scan       comm.ScanFile
+	lock       sync.Mutex
+	batchCount int
+	files      []db.FileInfo
+	filesChan  chan []db.FileInfo
+}
+
+func (s *ScanService) Init() error {
+	if len(config.Instance.Sync.Path) == 0 {
+		return errors.New("扫描路径未配置")
+	}
+
+	s.batchCount = 2000
+	s.filesChan = make(chan []db.FileInfo, 100)
+
+	return s.scan.Start(config.Instance.Sync.Path, func(path string, info fs.FileInfo) error {
+		finfo := db.FileInfo{}
+		finfo.Path = path
+		finfo.Name = filepath.Base(path)
+		finfo.ModifyAt = info.ModTime()
+		finfo.ISUpload = 0
+
+		if len(s.files) >= s.batchCount {
+			s.lock.Lock()
+			tmp := s.files
+			s.files = []db.FileInfo{}
+			s.lock.Unlock()
+
+			s.filesChan <- tmp
+		} else {
+			s.lock.Lock()
+			s.files = append(s.files, finfo)
+			s.lock.Unlock()
+		}
+
+		return nil
+	})
+}
+func (s *ScanService) Uninit() {
+	s.scan.Stop()
+	close(s.filesChan)
+}
+
+func (s *ScanService) Name() string {
+	return "文件扫描"
+}
+
+func (s *ScanService) Proc() {
+	d := 10 * time.Hour
+	t := time.NewTimer(d)
+	defer t.Stop()
+
+	for {
+		select {
+		case files := <-s.filesChan:
+			db.Instance.Clauses(clause.OnConflict{DoNothing: true}).CreateInBatches(&files, len(files))
+			log.Sys.Debug("写入文件信息，条数：", len(files))
+			t.Reset(d)
+		case <-t.C:
+			s.lock.Lock()
+			if len(s.files) != 0 {
+				db.Instance.Clauses(clause.OnConflict{DoNothing: true}).CreateInBatches(&s.files, len(s.files))
+				log.Sys.Debug("超时写入文件信息，条数：", len(s.files))
+				s.files = []db.FileInfo{}
+			}
+			s.lock.Unlock()
+			t.Reset(d)
+		}
+	}
+}
+
+func (s *ScanService) SubMessage() []int {
+	return []int{}
+}
+
+func (s *ScanService) ProcMessage(id int, args ...any) {
+
+}
