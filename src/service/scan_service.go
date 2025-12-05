@@ -106,12 +106,12 @@ func (s *ScanService) Proc() {
 						`},
 					})}).CreateInBatches(&s.files, len(s.files))
 				if result.Error != nil {
-					log.Sys.Error("超时写入文件信息失败，Error: ", result.Error.Error())
+					log.Sys.Error("定时写入文件信息失败，Error: ", result.Error.Error())
 					continue
 				}
 
 				s.files = []db.FileInfo{}
-				log.Sys.Debug("超时写入文件信息，条数：", result.RowsAffected)
+				log.Sys.Debug("定时写入文件信息，条数：", result.RowsAffected)
 			}
 			s.lock.Unlock()
 			t.Reset(d)

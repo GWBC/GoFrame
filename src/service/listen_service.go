@@ -4,6 +4,7 @@ import (
 	"GoFrame/src/components/config"
 	"GoFrame/src/components/db"
 	"GoFrame/src/components/log"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -36,6 +37,12 @@ func (s *ListenService) Proc() {
 		return
 	}
 
+	d := 10 * time.Second
+	t := time.NewTicker(d)
+	defer t.Stop()
+
+	files := map[string]time.Time{}
+
 	s.watcher.Add(config.Instance.Sync.Path)
 
 	for {
@@ -45,16 +52,15 @@ func (s *ListenService) Proc() {
 				return
 			}
 
+			nowTime := time.Now()
+
 			info := &db.FileInfo{}
 			info.Path = event.Name
-			info.Name = filepath.Base(event.Name)
-			info.Ext = filepath.Ext(event.Name)
-			info.ModifyAt = time.Now()
-			info.ISUpload = 0
 
 			if event.Has(fsnotify.Create) {
-				db.Instance.Save(info)
-				log.Sys.Debugf("新增文件:%s", event.Name)
+				files[event.Name] = nowTime
+			} else if event.Has(fsnotify.Write) {
+				files[event.Name] = nowTime
 			} else if event.Has(fsnotify.Remove) ||
 				event.Has(fsnotify.Rename) {
 				db.Instance.Delete(info)
@@ -66,6 +72,36 @@ func (s *ListenService) Proc() {
 			}
 
 			log.Sys.Errorf("监听文件服务发生错误，Err：%s", err.Error())
+		case <-t.C:
+			t := time.Now()
+			for file, tm := range files {
+				//一段时间没有写入，则认为文件已写完
+				if t.Sub(tm) < 60*time.Second {
+					continue
+				}
+
+				finfo, err := os.Stat(file)
+				if err != nil {
+					continue
+				}
+
+				info := &db.FileInfo{}
+				info.Path = file
+				info.Name = filepath.Base(info.Path)
+				info.Ext = filepath.Ext(info.Path)
+				info.ModifyAt = finfo.ModTime()
+				info.ISUpload = 0
+
+				result := db.Instance.Save(info)
+				if result.Error != nil {
+					log.Sys.Errorf("写入文件信息失败，Error: %s", result.Error.Error())
+					continue
+				}
+
+				log.Sys.Debugf("新增文件:%s", file)
+				delete(files, file)
+			}
+
 		}
 	}
 }
