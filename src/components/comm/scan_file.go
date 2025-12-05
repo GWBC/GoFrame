@@ -33,7 +33,7 @@ func (s *ScanFile) Start(dir string, fun ResultFun) error {
 		}()
 	}
 
-	s.dirChan <- dir
+	s.Scan(dir)
 
 	return nil
 }
@@ -45,7 +45,7 @@ func (s *ScanFile) Stop() {
 }
 
 func (s *ScanFile) Scan(dir string) {
-	s.dirChan <- dir
+	s.dirChan <- filepath.Join(dir)
 }
 
 func (s *ScanFile) processDir(dirPath string, fun ResultFun) {
@@ -58,7 +58,11 @@ func (s *ScanFile) processDir(dirPath string, fun ResultFun) {
 			return err
 		}
 
-		if info.IsDir() && path != dirPath {
+		if info.IsDir() {
+			if dirPath == path {
+				return nil
+			}
+
 			select {
 			case s.dirChan <- path:
 			default:

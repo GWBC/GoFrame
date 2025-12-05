@@ -48,6 +48,7 @@ func (s *ListenService) Proc() {
 			info := &db.FileInfo{}
 			info.Path = event.Name
 			info.Name = filepath.Base(event.Name)
+			info.Ext = filepath.Ext(event.Name)
 			info.ModifyAt = time.Now()
 			info.ISUpload = 0
 

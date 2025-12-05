@@ -34,6 +34,7 @@ func (s *ScanService) Init() error {
 		finfo := db.FileInfo{}
 		finfo.Path = path
 		finfo.Name = filepath.Base(path)
+		finfo.Ext = filepath.Ext(path)
 		finfo.ModifyAt = info.ModTime()
 		finfo.ISUpload = 0
 
@@ -63,22 +64,54 @@ func (s *ScanService) Name() string {
 }
 
 func (s *ScanService) Proc() {
-	d := 10 * time.Hour
+	d := 10 * time.Second
 	t := time.NewTimer(d)
 	defer t.Stop()
 
 	for {
 		select {
 		case files := <-s.filesChan:
-			db.Instance.Clauses(clause.OnConflict{DoNothing: true}).CreateInBatches(&files, len(files))
-			log.Sys.Debug("写入文件信息，条数：", len(files))
+			result := db.Instance.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "path"}},
+				DoUpdates: clause.Assignments(map[string]any{
+					"is_upload": clause.Expr{SQL: `
+							CASE 
+								WHEN file_infos.modify_at != excluded.modify_at 
+								THEN excluded.is_upload 
+								ELSE file_infos.is_upload
+							END,
+							modify_at = excluded.modify_at
+							where modify_at != excluded.modify_at
+						`},
+				})}).CreateInBatches(&files, len(files))
+			if result.Error != nil {
+				log.Sys.Error("写入文件信息失败，Error: ", result.Error.Error())
+				continue
+			}
+
+			log.Sys.Debug("写入文件信息，条数：", result.RowsAffected)
 			t.Reset(d)
 		case <-t.C:
 			s.lock.Lock()
 			if len(s.files) != 0 {
-				db.Instance.Clauses(clause.OnConflict{DoNothing: true}).CreateInBatches(&s.files, len(s.files))
-				log.Sys.Debug("超时写入文件信息，条数：", len(s.files))
+				result := db.Instance.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "path"}},
+					DoUpdates: clause.Assignments(map[string]any{
+						"is_upload": clause.Expr{SQL: `
+							CASE 
+								WHEN file_infos.modify_at != excluded.modify_at 
+								THEN excluded.is_upload 
+								ELSE file_infos.is_upload
+							END,
+							modify_at = excluded.modify_at
+							where modify_at != excluded.modify_at
+						`},
+					})}).CreateInBatches(&s.files, len(s.files))
+				if result.Error != nil {
+					log.Sys.Error("超时写入文件信息失败，Error: ", result.Error.Error())
+					continue
+				}
+
 				s.files = []db.FileInfo{}
+				log.Sys.Debug("超时写入文件信息，条数：", result.RowsAffected)
 			}
 			s.lock.Unlock()
 			t.Reset(d)
