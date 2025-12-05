@@ -36,7 +36,7 @@ func (s *ScanService) Init() error {
 		finfo.Name = filepath.Base(path)
 		finfo.Ext = filepath.Ext(path)
 		finfo.ModifyAt = info.ModTime()
-		finfo.ISUpload = 0
+		finfo.Flag = 0
 
 		if len(s.files) >= s.batchCount {
 			s.lock.Lock()
@@ -73,18 +73,18 @@ func (s *ScanService) Proc() {
 		case files := <-s.filesChan:
 			result := db.Instance.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "path"}},
 				DoUpdates: clause.Assignments(map[string]any{
-					"is_upload": clause.Expr{SQL: `
+					"flag": clause.Expr{SQL: `
 							CASE 
 								WHEN file_infos.modify_at != excluded.modify_at 
-								THEN excluded.is_upload 
-								ELSE file_infos.is_upload
+								THEN excluded.flag 
+								ELSE file_infos.flag
 							END,
 							modify_at = excluded.modify_at
 							where modify_at != excluded.modify_at
 						`},
 				})}).CreateInBatches(&files, len(files))
 			if result.Error != nil {
-				log.Sys.Error("写入文件信息失败，Error: ", result.Error.Error())
+				log.Sys.Error("写入文件信息失败，原因：", result.Error.Error())
 				continue
 			}
 
@@ -95,18 +95,18 @@ func (s *ScanService) Proc() {
 			if len(s.files) != 0 {
 				result := db.Instance.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "path"}},
 					DoUpdates: clause.Assignments(map[string]any{
-						"is_upload": clause.Expr{SQL: `
+						"flag": clause.Expr{SQL: `
 							CASE 
 								WHEN file_infos.modify_at != excluded.modify_at 
-								THEN excluded.is_upload 
-								ELSE file_infos.is_upload
+								THEN excluded.flag 
+								ELSE file_infos.flag
 							END,
 							modify_at = excluded.modify_at
 							where modify_at != excluded.modify_at
 						`},
 					})}).CreateInBatches(&s.files, len(s.files))
 				if result.Error != nil {
-					log.Sys.Error("定时写入文件信息失败，Error: ", result.Error.Error())
+					log.Sys.Error("定时写入文件信息失败，原因：", result.Error.Error())
 					continue
 				}
 

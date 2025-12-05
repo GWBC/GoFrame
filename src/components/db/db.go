@@ -20,7 +20,7 @@ var Instance = instance.Instance(func() *gorm.DB {
 		Logger: logger.Default.LogMode(logger.Silent),
 	})
 	if err != nil {
-		panic("数据库打开失败，Err:" + err.Error())
+		panic("数据库打开失败，原因：" + err.Error())
 	}
 
 	//sqlite不支持多连接，这里设置后可以让db在多协程中正常运行

@@ -99,7 +99,7 @@ var Instance = instance.Instance(func() *Config {
 	obj := Config{}
 	err := obj.initConfig()
 	if err != nil {
-		panic("初始化配置失败，Err:" + err.Error())
+		panic("初始化配置失败，原因：" + err.Error())
 	}
 
 	return &obj

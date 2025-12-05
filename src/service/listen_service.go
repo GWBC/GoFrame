@@ -41,6 +41,7 @@ func (s *ListenService) Proc() {
 	t := time.NewTicker(d)
 	defer t.Stop()
 
+	delFiles := []string{}
 	files := map[string]time.Time{}
 
 	s.watcher.Add(config.Instance.Sync.Path)
@@ -54,17 +55,13 @@ func (s *ListenService) Proc() {
 
 			nowTime := time.Now()
 
-			info := &db.FileInfo{}
-			info.Path = event.Name
-
 			if event.Has(fsnotify.Create) {
 				files[event.Name] = nowTime
 			} else if event.Has(fsnotify.Write) {
 				files[event.Name] = nowTime
 			} else if event.Has(fsnotify.Remove) ||
 				event.Has(fsnotify.Rename) {
-				db.Instance.Delete(info)
-				log.Sys.Debugf("删除文件:%s", event.Name)
+				delFiles = append(delFiles, event.Name)
 			}
 		case err, ok := <-s.watcher.Errors:
 			if !ok {
@@ -73,6 +70,18 @@ func (s *ListenService) Proc() {
 
 			log.Sys.Errorf("监听文件服务发生错误，Err：%s", err.Error())
 		case <-t.C:
+			//执行删除
+			if len(delFiles) != 0 {
+				result := db.Instance.Delete(&db.FileInfo{}, delFiles)
+				if result.Error != nil {
+					log.Sys.Debugf("删除文件信息失败，原因：%s", result.Error)
+					continue
+				}
+
+				delFiles = []string{}
+				log.Sys.Debugf("删除文件信息，个数：%d", result.RowsAffected)
+			}
+
 			t := time.Now()
 			for file, tm := range files {
 				//一段时间没有写入，则认为文件已写完
@@ -90,11 +99,11 @@ func (s *ListenService) Proc() {
 				info.Name = filepath.Base(info.Path)
 				info.Ext = filepath.Ext(info.Path)
 				info.ModifyAt = finfo.ModTime()
-				info.ISUpload = 0
+				info.Flag = 0
 
 				result := db.Instance.Save(info)
 				if result.Error != nil {
-					log.Sys.Errorf("写入文件信息失败，Error: %s", result.Error.Error())
+					log.Sys.Errorf("写入文件信息失败，原因：%s", result.Error.Error())
 					continue
 				}
 

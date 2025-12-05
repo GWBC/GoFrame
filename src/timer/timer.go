@@ -7,7 +7,9 @@ import (
 	"time"
 )
 
-var timers = []Timer{}
+var timers = []Timer{
+	&PackTimer{},
+}
 
 var timerGroup = sync.WaitGroup{}
 var timerCtx, timerCancelFun = context.WithCancel(context.Background())
@@ -23,7 +25,7 @@ func Start() error {
 	for _, svr := range timers {
 		err := svr.Init()
 		if err != nil {
-			log.Sys.Errorf("定时服务：%s 初始化失败，错误原因：%s", svr.Name(), err.Error())
+			log.Sys.Errorf("%s定时服务初始化失败，原因：%s", svr.Name(), err.Error())
 			return err
 		}
 	}
@@ -32,13 +34,13 @@ func Start() error {
 		timerGroup.Add(1)
 
 		go func(svr Timer) {
-			log.Sys.Infof("定时服务：%s 启动", svr.Name())
+			log.Sys.Infof("%s定时服务启动", svr.Name())
 
 			d := svr.Proc()
 			ticker := time.NewTicker(d)
 
 			defer func() {
-				log.Sys.Infof("定时服务：%s 退出", svr.Name())
+				log.Sys.Infof("%s定时服务退出", svr.Name())
 				ticker.Stop()
 				timerGroup.Done()
 			}()
