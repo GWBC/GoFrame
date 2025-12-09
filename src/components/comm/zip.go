@@ -64,17 +64,24 @@ func Zip(dirPath, password, zipFileName string) error {
 			path += "/"
 		}
 
-		// 写入文件的头信息
-		var w io.Writer
-		var errB error
-		if password != "" {
-			w, errB = zw.Encrypt(path, password, zip.AES256Encryption)
-		} else {
-			w, errB = zw.Create(path)
+		path = filepath.ToSlash(path)
+
+		header, err := zip.FileInfoHeader(info)
+		if err != nil {
+			return err
 		}
 
-		if errB != nil {
-			return errB
+		header.Name = path
+		header.Flags = 0x800
+		if len(password) != 0 {
+			header.Method = zip.Deflate
+			header.SetPassword(password)
+			header.SetEncryptionMethod(zip.AES256Encryption)
+		}
+
+		w, err := zw.CreateHeader(header)
+		if err != nil {
+			return err
 		}
 
 		if info.IsDir() {
@@ -99,7 +106,7 @@ func Zip(dirPath, password, zipFileName string) error {
 
 func UnZip(zipFileName, password, dirPath string) error {
 	if !IsZip(zipFileName) {
-		return errors.New("zip file format error")
+		return errors.New("无效的ZIP文件")
 	}
 
 	r, err := zip.OpenReader(zipFileName)
@@ -110,21 +117,16 @@ func UnZip(zipFileName, password, dirPath string) error {
 
 	for _, f := range r.File {
 		if f.IsEncrypted() {
+			if len(password) == 0 {
+				continue
+			}
+
 			f.SetPassword(password)
 		}
 
-		fp := filepath.Join(dirPath, f.Name)
-
 		if f.FileInfo().IsDir() {
-			os.MkdirAll(fp+"/", os.ModePerm)
 			continue
 		}
-
-		w, err := os.Create(fp)
-		if err != nil {
-			return err
-		}
-		defer w.Close()
 
 		fr, err := f.Open()
 		if err != nil {
@@ -132,8 +134,18 @@ func UnZip(zipFileName, password, dirPath string) error {
 		}
 		defer fr.Close()
 
-		if _, errC := io.Copy(w, fr); errC != nil {
-			return errC
+		fpath := filepath.Join(dirPath, f.Name)
+		os.MkdirAll(filepath.Dir(fpath), os.ModePerm)
+
+		w, err := os.Create(fpath)
+		if err != nil {
+			return err
+		}
+		defer w.Close()
+
+		_, err = io.Copy(w, fr)
+		if err != nil {
+			return err
 		}
 	}
 

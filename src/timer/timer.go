@@ -9,6 +9,7 @@ import (
 
 var timers = []Timer{
 	&PackTimer{},
+	&DeleteFileTimer{},
 }
 
 var timerGroup = sync.WaitGroup{}
@@ -35,26 +36,30 @@ func Start() error {
 
 		go func(svr Timer) {
 			log.Sys.Infof("%s定时服务启动", svr.Name())
-
-			d := svr.Proc()
-			ticker := time.NewTicker(d)
-
 			defer func() {
 				log.Sys.Infof("%s定时服务退出", svr.Name())
-				ticker.Stop()
 				timerGroup.Done()
 			}()
+
+			d := svr.Proc()
+			if d < 0 {
+				return
+			}
+
+			tr := time.NewTimer(d)
+			defer tr.Stop()
 
 			for {
 				select {
 				case <-timerCtx.Done():
 					return
-				case <-ticker.C:
-					tmp := svr.Proc()
-					if tmp != d {
-						ticker.Reset(tmp)
-						d = tmp
+				case <-tr.C:
+					d = svr.Proc()
+					if d < 0 {
+						return
 					}
+
+					tr.Reset(d)
 				}
 			}
 		}(svr)

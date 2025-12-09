@@ -17,6 +17,10 @@ type PackTimer struct {
 }
 
 func (s *PackTimer) Init() error {
+	if len(config.Instance.UpLoad.Path) == 0 {
+		return nil
+	}
+
 	s.packPath = filepath.Join(comm.Pwd(), "pack")
 	s.tmpPackPath = filepath.Join(comm.Pwd(), "temp")
 	os.MkdirAll(s.packPath, 0755)
@@ -31,6 +35,10 @@ func (s *PackTimer) Name() string {
 }
 
 func (s *PackTimer) Proc() time.Duration {
+	if len(config.Instance.UpLoad.Path) == 0 {
+		return -1
+	}
+
 	for {
 		fcount, err := comm.FileCount(s.packPath)
 		if err != nil {
@@ -104,6 +112,8 @@ func (s *PackTimer) Proc() time.Duration {
 			log.Sys.Errorf("修改打包文件名失败，原因：%s", err.Error())
 			break
 		}
+
+		log.Sys.Debugf("生成打包文件：%s", name)
 
 		//修改打包标识
 		result = db.Instance.Model(&db.FileInfo{}).Where("path in ?", selectFiles).Update("flag", 1)

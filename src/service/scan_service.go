@@ -5,7 +5,6 @@ import (
 	"GoFrame/src/components/config"
 	"GoFrame/src/components/db"
 	"GoFrame/src/components/log"
-	"errors"
 	"io/fs"
 	"path/filepath"
 	"sync"
@@ -23,12 +22,12 @@ type ScanService struct {
 }
 
 func (s *ScanService) Init() error {
-	if len(config.Instance.UpLoad.Path) == 0 {
-		return errors.New("扫描路径未配置")
-	}
-
 	s.batchCount = 2000
 	s.filesChan = make(chan []db.FileInfo, 100)
+
+	if len(config.Instance.UpLoad.Path) == 0 {
+		return nil
+	}
 
 	return s.scan.Start(config.Instance.UpLoad.Path, func(path string, info fs.FileInfo) error {
 		finfo := db.FileInfo{}
@@ -64,6 +63,10 @@ func (s *ScanService) Name() string {
 }
 
 func (s *ScanService) Proc() {
+	if len(config.Instance.UpLoad.Path) == 0 {
+		return
+	}
+
 	d := 10 * time.Second
 	t := time.NewTimer(d)
 	defer t.Stop()
@@ -88,7 +91,10 @@ func (s *ScanService) Proc() {
 				continue
 			}
 
-			log.Sys.Debug("写入文件信息，条数：", result.RowsAffected)
+			if result.RowsAffected != 0 {
+				log.Sys.Debug("写入文件信息，条数：", result.RowsAffected)
+			}
+
 			t.Reset(d)
 		case <-t.C:
 			s.lock.Lock()
@@ -111,7 +117,9 @@ func (s *ScanService) Proc() {
 				}
 
 				s.files = []db.FileInfo{}
-				log.Sys.Debug("定时写入文件信息，条数：", result.RowsAffected)
+				if result.RowsAffected != 0 {
+					log.Sys.Debug("定时写入文件信息，条数：", result.RowsAffected)
+				}
 			}
 			s.lock.Unlock()
 			t.Reset(d)
