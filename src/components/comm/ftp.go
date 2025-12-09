@@ -20,7 +20,7 @@ func (f *FTP) FileCount(path string) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	defer c.Logout()
+	defer f.close(c)
 
 	names, err := c.NameList(path)
 	if err != nil {
@@ -35,7 +35,7 @@ func (f *FTP) FileNames(path string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer c.Logout()
+	defer f.close(c)
 
 	return c.NameList(path)
 }
@@ -45,7 +45,7 @@ func (f *FTP) FileList(path string) ([]*ftp.Entry, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer c.Logout()
+	defer f.close(c)
 
 	return c.List(path)
 }
@@ -55,12 +55,13 @@ func (f *FTP) UpLoad(localPath string, remotePath string) error {
 	if err != nil {
 		return err
 	}
-	defer c.Logout()
+	defer f.close(c)
 
 	file, err := os.Open(localPath)
 	if err != nil {
 		return err
 	}
+	defer file.Close()
 
 	err = c.Type(ftp.TransferTypeBinary)
 	if err != nil {
@@ -80,7 +81,7 @@ func (f *FTP) Down(remotePath string, localPath string) error {
 	if err != nil {
 		return err
 	}
-	defer c.Logout()
+	defer f.close(c)
 
 	name := FileName(localPath)
 	if len(name) == 0 {
@@ -102,6 +103,7 @@ func (f *FTP) Down(remotePath string, localPath string) error {
 	if err != nil {
 		return err
 	}
+	defer file.Close()
 
 	_, err = io.Copy(file, resp)
 
@@ -113,12 +115,17 @@ func (f *FTP) login() (*ftp.ServerConn, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer c.Logout()
 
 	err = c.Login(f.User, f.Password)
 	if err != nil {
+		c.Quit()
 		return nil, err
 	}
 
 	return c, nil
+}
+
+func (f *FTP) close(c *ftp.ServerConn) {
+	c.Logout()
+	c.Quit()
 }

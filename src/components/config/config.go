@@ -27,6 +27,7 @@ type FTPInfo struct {
 	Addr     string `yaml:"Addr"`     //服务器地址
 	User     string `yaml:"User"`     //用户名
 	Password string `yaml:"Password"` //密码
+	RootPath string `yaml:"RootPath"` //根路径
 }
 
 type UpLoad struct {
@@ -73,6 +74,11 @@ func (c *Config) initConfig() error {
 			c.Log.MaxBackups = 10
 			c.Log.Level = logrus.DebugLevel
 			c.Log.IsOutputStd = true
+
+			c.FTPInfo.Addr = "172.16.100.223:21"
+			c.FTPInfo.User = "zhang"
+			c.FTPInfo.Password = "zhang"
+			c.FTPInfo.RootPath = "/"
 
 			c.UpLoad.Path = "D:/5.34懒人汉化/RKDevTool_Release_v2.96_zh"
 			c.UpLoad.PackFilter = []string{".exe", ".cfg"}
