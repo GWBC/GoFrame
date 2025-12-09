@@ -21,6 +21,10 @@ type ScanService struct {
 	filesChan  chan []db.FileInfo
 }
 
+func (s *ScanService) Enable() bool {
+	return len(config.Instance.UpLoad.Path) != 0
+}
+
 func (s *ScanService) Init() error {
 	s.batchCount = 2000
 	s.filesChan = make(chan []db.FileInfo, 100)
@@ -63,10 +67,6 @@ func (s *ScanService) Name() string {
 }
 
 func (s *ScanService) Proc() {
-	if len(config.Instance.UpLoad.Path) == 0 {
-		return
-	}
-
 	d := 10 * time.Second
 	t := time.NewTimer(d)
 	defer t.Stop()

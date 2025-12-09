@@ -16,11 +16,11 @@ type PackTimer struct {
 	tmpPackPath string
 }
 
-func (s *PackTimer) Init() error {
-	if len(config.Instance.UpLoad.Path) == 0 {
-		return nil
-	}
+func (s *PackTimer) Enable() bool {
+	return len(config.Instance.UpLoad.Path) != 0
+}
 
+func (s *PackTimer) Init() error {
 	s.packPath = filepath.Join(comm.Pwd(), "pack")
 	s.tmpPackPath = filepath.Join(comm.Pwd(), "temp")
 	os.MkdirAll(s.packPath, 0755)
@@ -35,10 +35,6 @@ func (s *PackTimer) Name() string {
 }
 
 func (s *PackTimer) Proc() time.Duration {
-	if len(config.Instance.UpLoad.Path) == 0 {
-		return -1
-	}
-
 	for {
 		fcount, err := comm.FileCount(s.packPath)
 		if err != nil {

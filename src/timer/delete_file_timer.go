@@ -8,6 +8,10 @@ import (
 type DeleteFileTimer struct {
 }
 
+func (s *DeleteFileTimer) Enable() bool {
+	return config.Instance.UpLoad.ISDelFile
+}
+
 func (s *DeleteFileTimer) Init() error {
 	return nil
 }
@@ -20,9 +24,5 @@ func (s *DeleteFileTimer) Name() string {
 }
 
 func (s *DeleteFileTimer) Proc() time.Duration {
-	if !config.Instance.UpLoad.ISDelFile {
-		return -1
-	}
-
 	return 30 * time.Second
 }

@@ -10,12 +10,14 @@ import (
 var timers = []Timer{
 	&PackTimer{},
 	&DeleteFileTimer{},
+	&UploadFTPTimer{},
 }
 
 var timerGroup = sync.WaitGroup{}
 var timerCtx, timerCancelFun = context.WithCancel(context.Background())
 
 type Timer interface {
+	Enable() bool        //是否激活
 	Init() error         //初始化
 	Uninit()             //卸载
 	Name() string        //名称
@@ -24,6 +26,10 @@ type Timer interface {
 
 func Start() error {
 	for _, svr := range timers {
+		if !svr.Enable() {
+			continue
+		}
+
 		err := svr.Init()
 		if err != nil {
 			log.Sys.Errorf("%s定时服务初始化失败，原因：%s", svr.Name(), err.Error())
@@ -32,6 +38,10 @@ func Start() error {
 	}
 
 	for _, svr := range timers {
+		if !svr.Enable() {
+			continue
+		}
+
 		timerGroup.Add(1)
 
 		go func(svr Timer) {
@@ -72,6 +82,10 @@ func Stop() {
 	timerCancelFun()
 
 	for _, svr := range timers {
+		if !svr.Enable() {
+			continue
+		}
+
 		svr.Uninit()
 	}
 

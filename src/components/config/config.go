@@ -23,6 +23,12 @@ type Log struct {
 	IsOutputStd bool         `yaml:"IsOutputStd"` //是否输出到终端
 }
 
+type FTPInfo struct {
+	Addr     string `yaml:"Addr"`     //服务器地址
+	User     string `yaml:"User"`     //用户名
+	Password string `yaml:"Password"` //密码
+}
+
 type UpLoad struct {
 	Path              string   `yaml:"Path"`              //同步目录
 	PackFilter        []string `yaml:"PackFilter"`        //打包过滤器，文件后缀，例子：.mp4
@@ -33,9 +39,10 @@ type UpLoad struct {
 }
 
 type Config struct {
-	System System `yaml:"System"`
-	Log    Log    `yaml:"Log"`
-	UpLoad UpLoad `yaml:"UpLoad"`
+	System  System  `yaml:"System"`
+	Log     Log     `yaml:"Log"`
+	FTPInfo FTPInfo `yaml:"FTPInfo"`
+	UpLoad  UpLoad  `yaml:"UpLoad"`
 }
 
 var configPath = filepath.Join(comm.Pwd(), "data", "config.yml")

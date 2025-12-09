@@ -15,6 +15,10 @@ type ListenService struct {
 	watcher *fsnotify.Watcher
 }
 
+func (s *ListenService) Enable() bool {
+	return len(config.Instance.UpLoad.Path) != 0
+}
+
 func (s *ListenService) Init() error {
 	w, err := fsnotify.NewWatcher()
 	if err != nil {
@@ -33,10 +37,6 @@ func (s *ListenService) Name() string {
 }
 
 func (s *ListenService) Proc() {
-	if len(config.Instance.UpLoad.Path) == 0 {
-		return
-	}
-
 	d := 10 * time.Second
 	t := time.NewTicker(d)
 	defer t.Stop()

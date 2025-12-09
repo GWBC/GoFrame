@@ -14,6 +14,7 @@ var serviceList = []Service{
 var serviceGroup = sync.WaitGroup{}
 
 type Service interface {
+	Enable() bool                    //是否激活
 	Init() error                     //初始化
 	Uninit()                         //卸载
 	Name() string                    //名称
@@ -24,6 +25,10 @@ type Service interface {
 
 func Start() error {
 	for _, svr := range serviceList {
+		if !svr.Enable() {
+			continue
+		}
+
 		err := svr.Init()
 		if err != nil {
 			log.Sys.Errorf("%s服务初始化失败，错误原因：%s", svr.Name(), err.Error())
@@ -32,6 +37,10 @@ func Start() error {
 	}
 
 	for _, svr := range serviceList {
+		if !svr.Enable() {
+			continue
+		}
+
 		serviceGroup.Add(1)
 
 		go func(svr Service) {
@@ -62,6 +71,10 @@ func Start() error {
 
 func Stop() {
 	for _, svr := range serviceList {
+		if !svr.Enable() {
+			continue
+		}
+
 		svr.Uninit()
 	}
 
