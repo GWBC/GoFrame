@@ -33,7 +33,7 @@ func (s *ListenService) Name() string {
 }
 
 func (s *ListenService) Proc() {
-	if len(config.Instance.Sync.Path) == 0 {
+	if len(config.Instance.UpLoad.Path) == 0 {
 		return
 	}
 
@@ -44,7 +44,7 @@ func (s *ListenService) Proc() {
 	delFiles := []string{}
 	files := map[string]time.Time{}
 
-	s.watcher.Add(config.Instance.Sync.Path)
+	s.watcher.Add(config.Instance.UpLoad.Path)
 
 	for {
 		select {
@@ -76,6 +76,11 @@ func (s *ListenService) Proc() {
 				if result.Error != nil {
 					log.Sys.Debugf("删除文件信息失败，原因：%s", result.Error)
 					continue
+				}
+
+				//将创建中的文件删除
+				for _, file := range delFiles {
+					delete(files, file)
 				}
 
 				delFiles = []string{}

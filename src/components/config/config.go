@@ -9,6 +9,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+const ZIPPassword = "(!@#$%^&*)"
+
 type System struct {
 	Services bool `yaml:"Services"`
 }
@@ -21,14 +23,19 @@ type Log struct {
 	IsOutputStd bool         `yaml:"IsOutputStd"` //是否输出到终端
 }
 
-type Sync struct {
-	Path string `yaml:"Path"`
+type UpLoad struct {
+	Path              string   `yaml:"Path"`              //同步目录
+	PackFilter        []string `yaml:"PackFilter"`        //打包过滤器，文件后缀，例子：.mp4
+	PackCount         int      `yaml:"PackCount"`         //打包个数
+	PackMaxFile       int      `yaml:"PackMaxFile"`       //打包目录下最大文件数
+	ISDelFile         bool     `yaml:"ISDelFile"`         //打包完成后是否删除文件
+	FileRetentionTime int      `yaml:"FileRetentionTime"` //删除开启后，保留的时间，单位小时
 }
 
 type Config struct {
 	System System `yaml:"System"`
 	Log    Log    `yaml:"Log"`
-	Sync   Sync   `yaml:"Sync"`
+	UpLoad UpLoad `yaml:"UpLoad"`
 }
 
 var configPath = filepath.Join(comm.Pwd(), "data", "config.yml")
@@ -53,15 +60,20 @@ func (c *Config) initConfig() error {
 	data, err := os.ReadFile(configPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			log := Log{}
-			log.MaxSize = 200
-			log.MaxAge = 7
-			log.MaxBackups = 10
-			log.Level = logrus.DebugLevel
-			log.IsOutputStd = true
-
 			//不存在，则创建配置文件
-			c.Log = log
+			c.Log.MaxSize = 200
+			c.Log.MaxAge = 7
+			c.Log.MaxBackups = 10
+			c.Log.Level = logrus.DebugLevel
+			c.Log.IsOutputStd = true
+
+			c.UpLoad.Path = "D:/5.34懒人汉化/RKDevTool_Release_v2.96_zh"
+			c.UpLoad.PackFilter = []string{".exe", ".cfg"}
+			c.UpLoad.PackCount = 10
+			c.UpLoad.PackMaxFile = 200
+			c.UpLoad.ISDelFile = true
+			c.UpLoad.FileRetentionTime = 1
+
 			return c.Save()
 		}
 

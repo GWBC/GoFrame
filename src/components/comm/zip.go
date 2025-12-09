@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	zip "github.com/mzky/zip"
 )
@@ -26,7 +27,14 @@ func IsZip(fileName string) bool {
 }
 
 func Zip(dirPath, password, zipFileName string) error {
-	tPath, _ := filepath.Abs(dirPath)
+	tPath, err := filepath.Abs(dirPath)
+	if err != nil {
+		return err
+	}
+
+	if !strings.HasSuffix(tPath, string(filepath.Separator)) {
+		tPath += string(filepath.Separator)
+	}
 
 	fz, err := os.Create(zipFileName)
 	if err != nil {
@@ -37,13 +45,20 @@ func Zip(dirPath, password, zipFileName string) error {
 	defer zw.Close()
 
 	err = filepath.Walk(tPath, func(path string, info os.FileInfo, err error) error {
-		fr, errA := os.Open(path)
-		if errA != nil {
-			return errA
+		fr, err := os.Open(path)
+		if err != nil {
+			return err
 		}
 		defer fr.Close()
 
-		path = path[len(tPath):]
+		path, err = filepath.Rel(tPath, path)
+		if err != nil {
+			return err
+		}
+
+		if path == "." {
+			return nil
+		}
 
 		if info.IsDir() {
 			path += "/"

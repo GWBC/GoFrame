@@ -17,7 +17,7 @@ var Instance = instance.Instance(func() *gorm.DB {
 	os.MkdirAll(filepath.Dir(fileName), 0755)
 
 	db, err := gorm.Open(sqlite.Open(fileName), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Silent),
+		Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err != nil {
 		panic("数据库打开失败，原因：" + err.Error())

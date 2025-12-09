@@ -23,14 +23,14 @@ type ScanService struct {
 }
 
 func (s *ScanService) Init() error {
-	if len(config.Instance.Sync.Path) == 0 {
+	if len(config.Instance.UpLoad.Path) == 0 {
 		return errors.New("扫描路径未配置")
 	}
 
 	s.batchCount = 2000
 	s.filesChan = make(chan []db.FileInfo, 100)
 
-	return s.scan.Start(config.Instance.Sync.Path, func(path string, info fs.FileInfo) error {
+	return s.scan.Start(config.Instance.UpLoad.Path, func(path string, info fs.FileInfo) error {
 		finfo := db.FileInfo{}
 		finfo.Path = path
 		finfo.Name = filepath.Base(path)
