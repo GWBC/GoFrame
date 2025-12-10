@@ -89,14 +89,14 @@ func (c *Config) initConfig() error {
 			c.FTPInfo.Password = "zhang"
 			c.FTPInfo.RootPath = "/"
 
-			c.UpLoad.Path = "D:/5.34懒人汉化/RKDevTool_Release_v2.96_zh"
+			c.UpLoad.Path = "/root/code/HiSTBLinuxV100R005C00SPC050"
 			c.UpLoad.PackFilter = []string{}
-			c.UpLoad.PackCount = 10
+			c.UpLoad.PackCount = 40
 			c.UpLoad.PackMaxFile = 200
 			c.UpLoad.ISDelFile = false
 			c.UpLoad.FileRetentionTime = 1
 
-			c.DownLoad.Path = "D:/5.34懒人汉化/RKDevTool_Release"
+			c.DownLoad.Path = "/root/code/HiSTBLinuxV100R005C00SPC050_back"
 			c.DownLoad.DownMaxFile = 200
 
 			return c.Save()

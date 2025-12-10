@@ -12,8 +12,9 @@ import (
 )
 
 type PackTimer struct {
-	uploadPath    string
-	tmpUploadPath string
+	uploadPath      string
+	uploadZipPath   string
+	uploadFilesPath string
 }
 
 func (s *PackTimer) Enable() bool {
@@ -22,7 +23,8 @@ func (s *PackTimer) Enable() bool {
 
 func (s *PackTimer) Init() error {
 	s.uploadPath = filepath.Join(comm.Pwd(), "upload")
-	s.tmpUploadPath = filepath.Join(s.uploadPath, "temp")
+	s.uploadZipPath = filepath.Join(s.uploadPath, "zip")
+	s.uploadFilesPath = filepath.Join(s.uploadPath, "files")
 	os.MkdirAll(s.uploadPath, 0755)
 	return nil
 }
@@ -47,8 +49,11 @@ func (s *PackTimer) Proc() time.Duration {
 			return 1 * time.Minute
 		}
 
-		os.RemoveAll(s.tmpUploadPath)
+		os.RemoveAll(s.uploadZipPath)
+		os.RemoveAll(s.uploadFilesPath)
+
 		os.MkdirAll(s.uploadPath, 0755)
+		os.MkdirAll(s.uploadZipPath, 0755)
 
 		//获取打包文件
 		flist := []db.FileInfo{}
@@ -62,7 +67,6 @@ func (s *PackTimer) Proc() time.Duration {
 			continue
 		}
 
-		t := time.Now().Unix()
 		selectFiles := []string{}
 
 		for _, file := range flist {
@@ -71,7 +75,7 @@ func (s *PackTimer) Proc() time.Duration {
 				continue
 			}
 
-			dstPath := filepath.Join(s.tmpUploadPath, rel)
+			dstPath := filepath.Join(s.uploadFilesPath, rel)
 
 			_, err = comm.CopyFile(file.Path, dstPath)
 			if err != nil {
@@ -86,10 +90,10 @@ func (s *PackTimer) Proc() time.Duration {
 		}
 
 		//打包成zip
-		baseName := config.Instance.PackPrefix + "_" + strconv.FormatInt(t, 10)
-		tmpName := filepath.Join(s.uploadPath, baseName)
+		baseName := config.Instance.PackPrefix + "_" + strconv.FormatInt(time.Now().UnixMilli(), 10)
+		tmpName := filepath.Join(s.uploadZipPath, baseName)
 
-		err = comm.Zip(s.tmpUploadPath, config.ZIPPassword, tmpName)
+		err = comm.Zip(s.uploadFilesPath, config.ZIPPassword, tmpName)
 		if err != nil {
 			log.Sys.Errorf("打包文件失败，原因：%s", err.Error())
 			break
@@ -101,7 +105,7 @@ func (s *PackTimer) Proc() time.Duration {
 			break
 		}
 
-		name := filepath.Join(filepath.Dir(tmpName), baseName+"_"+strconv.FormatInt(info.Size(), 10))
+		name := filepath.Join(s.uploadPath, baseName+"_"+strconv.FormatInt(info.Size(), 10))
 
 		err = os.Rename(tmpName, name)
 		if err != nil {
