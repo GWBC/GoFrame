@@ -4,6 +4,7 @@ import (
 	"GoFrame/src/components/comm"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
@@ -45,12 +46,13 @@ type DownLoad struct {
 }
 
 type Config struct {
-	System     System   `yaml:"System"`
-	Log        Log      `yaml:"Log"`
-	PackPrefix string   `yaml:"PackPrefix"`
-	FTPInfo    FTPInfo  `yaml:"FTPInfo"`
-	UpLoad     UpLoad   `yaml:"UpLoad"`
-	DownLoad   DownLoad `yaml:"DownLoad"`
+	System       System   `yaml:"System"`
+	Log          Log      `yaml:"Log"`
+	ProcInterval int      `yaml:"ProcInterval"` //处理间隔，单位秒
+	PackPrefix   string   `yaml:"PackPrefix"`
+	FTPInfo      FTPInfo  `yaml:"FTPInfo"`
+	UpLoad       UpLoad   `yaml:"UpLoad"`
+	DownLoad     DownLoad `yaml:"DownLoad"`
 }
 
 var configPath = filepath.Join(comm.Pwd(), "data", "config.yml")
@@ -82,6 +84,7 @@ func (c *Config) initConfig() error {
 			c.Log.Level = logrus.DebugLevel
 			c.Log.IsOutputStd = true
 
+			c.ProcInterval = 10
 			c.PackPrefix = "file"
 
 			c.FTPInfo.Addr = "172.16.100.223:21"
@@ -141,3 +144,7 @@ var Instance = instance.Instance(func() *Config {
 
 	return &obj
 })
+
+func ProcInterval(rate int) time.Duration {
+	return time.Duration(rate*Instance.ProcInterval) * time.Second
+}

@@ -85,5 +85,5 @@ func (s *DeleteFileTimer) Proc() time.Duration {
 		}
 	}
 
-	return 30 * time.Second
+	return config.ProcInterval(1)
 }

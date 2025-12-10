@@ -61,16 +61,16 @@ func (s *UploadFTPTimer) Proc() time.Duration {
 
 			if err != nil {
 				log.Sys.Errorf("上传打包文件失败，原因：%s", err.Error())
-				return 10 * time.Second
+				break
 			}
 
 			err := os.Remove(upFile)
 			if err != nil {
 				log.Sys.Errorf("删除打包文件失败，原因：%s", err.Error())
-				return 10 * time.Second
+				break
 			}
 		}
 	}
 
-	return 30 * time.Second
+	return config.ProcInterval(1)
 }

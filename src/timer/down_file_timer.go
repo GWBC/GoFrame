@@ -42,7 +42,7 @@ func (s *DownFileTimer) Proc() time.Duration {
 
 	for {
 		if s.isStopDown() {
-			return 1 * time.Minute
+			return config.ProcInterval(2)
 		}
 
 		fs, err := ftp.FileList(config.Instance.FTPInfo.RootPath)
@@ -53,7 +53,7 @@ func (s *DownFileTimer) Proc() time.Duration {
 
 		for _, file := range fs {
 			if s.isStopDown() {
-				return 1 * time.Minute
+				return config.ProcInterval(2)
 			}
 
 			v := strings.Split(file.Name, "_")
@@ -95,7 +95,7 @@ func (s *DownFileTimer) Proc() time.Duration {
 		break
 	}
 
-	return 30 * time.Second
+	return config.ProcInterval(1)
 }
 
 func (s *DownFileTimer) isStopDown() bool {
@@ -106,7 +106,7 @@ func (s *DownFileTimer) isStopDown() bool {
 	}
 
 	if fcount >= config.Instance.DownLoad.DownMaxFile {
-		log.Sys.Errorf("下载目录中的文件数大于%d，停止下载", config.Instance.DownLoad.DownMaxFile)
+		log.Sys.Errorf("下载目录中的文件数大于%d，暂停下载", config.Instance.DownLoad.DownMaxFile)
 		return true
 	}
 

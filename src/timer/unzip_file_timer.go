@@ -58,5 +58,5 @@ func (s *UnzipFileTimer) Proc() time.Duration {
 		}
 	}
 
-	return 30 * time.Second
+	return config.ProcInterval(1)
 }

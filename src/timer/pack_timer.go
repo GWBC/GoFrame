@@ -45,8 +45,8 @@ func (s *PackTimer) Proc() time.Duration {
 		}
 
 		if fcount >= config.Instance.UpLoad.PackMaxFile {
-			log.Sys.Errorf("打包目录中的文件数大于%d，停止打包", config.Instance.UpLoad.PackMaxFile)
-			return 1 * time.Minute
+			log.Sys.Errorf("打包目录中的文件数大于%d，暂停打包", config.Instance.UpLoad.PackMaxFile)
+			return config.ProcInterval(2)
 		}
 
 		os.RemoveAll(s.uploadZipPath)
@@ -123,5 +123,5 @@ func (s *PackTimer) Proc() time.Duration {
 		}
 	}
 
-	return 30 * time.Second
+	return config.ProcInterval(1)
 }
