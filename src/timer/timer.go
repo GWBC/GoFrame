@@ -12,6 +12,7 @@ var timers = []Timer{
 	&DeleteFileTimer{},
 	&UploadFTPTimer{},
 	&DownFileTimer{},
+	&UnzipFileTimer{},
 }
 
 var timerGroup = sync.WaitGroup{}
