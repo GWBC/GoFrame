@@ -39,11 +39,18 @@ type UpLoad struct {
 	FileRetentionTime int      `yaml:"FileRetentionTime"` //删除开启后，保留的时间，单位小时
 }
 
+type DownLoad struct {
+	Path        string `yaml:"Path"`        //下载写入目录
+	DownMaxFile int    `yaml:"PackMaxFile"` //下载目录下最大文件数
+}
+
 type Config struct {
-	System  System  `yaml:"System"`
-	Log     Log     `yaml:"Log"`
-	FTPInfo FTPInfo `yaml:"FTPInfo"`
-	UpLoad  UpLoad  `yaml:"UpLoad"`
+	System     System   `yaml:"System"`
+	Log        Log      `yaml:"Log"`
+	PackPrefix string   `yaml:"PackPrefix"`
+	FTPInfo    FTPInfo  `yaml:"FTPInfo"`
+	UpLoad     UpLoad   `yaml:"UpLoad"`
+	DownLoad   DownLoad `yaml:"DownLoad"`
 }
 
 var configPath = filepath.Join(comm.Pwd(), "data", "config.yml")
@@ -75,6 +82,8 @@ func (c *Config) initConfig() error {
 			c.Log.Level = logrus.DebugLevel
 			c.Log.IsOutputStd = true
 
+			c.PackPrefix = "file"
+
 			c.FTPInfo.Addr = "172.16.100.223:21"
 			c.FTPInfo.User = "zhang"
 			c.FTPInfo.Password = "zhang"
@@ -84,8 +93,11 @@ func (c *Config) initConfig() error {
 			c.UpLoad.PackFilter = []string{".exe", ".cfg"}
 			c.UpLoad.PackCount = 10
 			c.UpLoad.PackMaxFile = 200
-			c.UpLoad.ISDelFile = true
+			c.UpLoad.ISDelFile = false
 			c.UpLoad.FileRetentionTime = 1
+
+			c.DownLoad.Path = "D:/5.34懒人汉化/RKDevTool_Release_v2.96_zh"
+			c.DownLoad.DownMaxFile = 200
 
 			return c.Save()
 		}

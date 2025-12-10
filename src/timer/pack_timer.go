@@ -12,8 +12,8 @@ import (
 )
 
 type PackTimer struct {
-	packPath    string
-	tmpPackPath string
+	uploadPath    string
+	tmpUploadPath string
 }
 
 func (s *PackTimer) Enable() bool {
@@ -21,9 +21,9 @@ func (s *PackTimer) Enable() bool {
 }
 
 func (s *PackTimer) Init() error {
-	s.packPath = filepath.Join(comm.Pwd(), "pack")
-	s.tmpPackPath = filepath.Join(comm.Pwd(), "temp")
-	os.MkdirAll(s.packPath, 0755)
+	s.uploadPath = filepath.Join(comm.Pwd(), "upload")
+	s.tmpUploadPath = filepath.Join(s.uploadPath, "temp")
+	os.MkdirAll(s.uploadPath, 0755)
 	return nil
 }
 
@@ -36,27 +36,27 @@ func (s *PackTimer) Name() string {
 
 func (s *PackTimer) Proc() time.Duration {
 	for {
-		fcount, err := comm.FileCount(s.packPath)
+		fcount, err := comm.FileCount(s.uploadPath)
 		if err != nil {
-			log.Sys.Errorf("获取打包目录下文件数失败，原因：%s", err.Error())
+			log.Sys.Errorf("获取打包目录中的文件数失败，原因：%s", err.Error())
 			break
 		}
 
 		if fcount >= config.Instance.UpLoad.PackMaxFile {
-			log.Sys.Errorf("打包目录下文件数大于%d，停止打包", config.Instance.UpLoad.PackMaxFile)
+			log.Sys.Errorf("打包目录中的文件数大于%d，停止打包", config.Instance.UpLoad.PackMaxFile)
 			return 1 * time.Minute
 		}
 
-		os.RemoveAll(s.tmpPackPath)
-		os.MkdirAll(s.packPath, 0755)
+		os.RemoveAll(s.tmpUploadPath)
+		os.MkdirAll(s.uploadPath, 0755)
 
 		//获取打包文件
 		flist := []db.FileInfo{}
-		tx := db.Instance.Limit(config.Instance.UpLoad.PackCount).Where("flag=0")
+		result := db.Instance.Limit(config.Instance.UpLoad.PackCount).Where("flag=0")
 		if len(config.Instance.UpLoad.PackFilter) != 0 {
-			tx = tx.Where("ext not in ?", config.Instance.UpLoad.PackFilter)
+			result = result.Where("ext not in ?", config.Instance.UpLoad.PackFilter)
 		}
-		result := tx.Order("modify_at").Find(&flist)
+		result = result.Order("modify_at").Find(&flist)
 		if result.Error != nil {
 			log.Sys.Errorf("获取打包数失败，原因：%s", result.Error)
 			continue
@@ -71,7 +71,7 @@ func (s *PackTimer) Proc() time.Duration {
 				continue
 			}
 
-			dstPath := filepath.Join(s.tmpPackPath, rel)
+			dstPath := filepath.Join(s.tmpUploadPath, rel)
 
 			_, err = comm.CopyFile(file.Path, dstPath)
 			if err != nil {
@@ -86,10 +86,10 @@ func (s *PackTimer) Proc() time.Duration {
 		}
 
 		//打包成zip
-		baseName := "file_" + strconv.FormatInt(t, 10)
-		tmpName := filepath.Join(s.packPath, baseName)
+		baseName := config.Instance.PackPrefix + "_" + strconv.FormatInt(t, 10)
+		tmpName := filepath.Join(s.uploadPath, baseName)
 
-		err = comm.Zip(s.tmpPackPath, config.ZIPPassword, tmpName)
+		err = comm.Zip(s.tmpUploadPath, config.ZIPPassword, tmpName)
 		if err != nil {
 			log.Sys.Errorf("打包文件失败，原因：%s", err.Error())
 			break

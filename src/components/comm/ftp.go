@@ -110,6 +110,16 @@ func (f *FTP) Down(remotePath string, localPath string) error {
 	return err
 }
 
+func (f *FTP) Delete(path string) error {
+	c, err := f.login()
+	if err != nil {
+		return err
+	}
+	defer f.close(c)
+
+	return c.Delete(path)
+}
+
 func (f *FTP) login() (*ftp.ServerConn, error) {
 	c, err := ftp.Dial(f.Addr, ftp.DialWithTimeout(20*time.Second))
 	if err != nil {

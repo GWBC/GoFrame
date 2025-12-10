@@ -72,12 +72,12 @@ func (s *DeleteFileTimer) Proc() time.Duration {
 		}
 
 		for _, file := range delFiles {
-			// err := os.Remove(file.Path)
-			// if err != nil {
-			// 	if !os.IsNotExist(err) {
-			// 		continue
-			// 	}
-			// }
+			err := os.Remove(file.Path)
+			if err != nil {
+				if !os.IsNotExist(err) {
+					continue
+				}
+			}
 
 			db.Instance.Delete(&file)
 		}

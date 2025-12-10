@@ -10,7 +10,7 @@ import (
 )
 
 type UploadFTPTimer struct {
-	packPath string
+	uploadPath string
 }
 
 func (s *UploadFTPTimer) Enable() bool {
@@ -18,7 +18,7 @@ func (s *UploadFTPTimer) Enable() bool {
 }
 
 func (s *UploadFTPTimer) Init() error {
-	s.packPath = filepath.Join(comm.Pwd(), "pack")
+	s.uploadPath = filepath.Join(comm.Pwd(), "upload")
 	return nil
 }
 
@@ -31,7 +31,7 @@ func (s *UploadFTPTimer) Name() string {
 
 func (s *UploadFTPTimer) Proc() time.Duration {
 	for {
-		fs, err := os.ReadDir(s.packPath)
+		fs, err := os.ReadDir(s.uploadPath)
 		if err != nil {
 			log.Sys.Errorf("获取打包目录下文件失败，原因：%s", err.Error())
 			break
@@ -50,7 +50,7 @@ func (s *UploadFTPTimer) Proc() time.Duration {
 				continue
 			}
 
-			upFile := filepath.Join(s.packPath, file.Name())
+			upFile := filepath.Join(s.uploadPath, file.Name())
 
 			for range 3 {
 				err = ftp.UpLoad(upFile, config.Instance.FTPInfo.RootPath)
