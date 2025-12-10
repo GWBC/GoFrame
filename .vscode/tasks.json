@@ -3,7 +3,7 @@
   "tasks": [
     {
       "type": "go",
-      "label": "build",
+      "label": "window",
       "command": "build",
       "args": ["-o", "${workspaceFolder}/bin/goframe.exe"],
       "problemMatcher": ["$go"],
@@ -20,6 +20,28 @@
         "cwd": "${workspaceFolder}/src",
         "env": {
           "GOOS": "windows"
+        }
+      }
+    },
+     {
+      "type": "go",
+      "label": "linux",
+      "command": "build",
+      "args": ["-o", "${workspaceFolder}/bin/goframe"],
+      "problemMatcher": ["$go"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "options": {
+        "cwd": "${workspaceFolder}/src",
+        "env": {
+          "GOOS": "linux"
         }
       }
     }
