@@ -110,7 +110,7 @@ func (s *ListenService) work() {
 				t := time.Now()
 				for file, tm := range files {
 					//一段时间没有写入，则认为文件已写完
-					if t.Sub(tm) < 60*time.Second {
+					if t.Sub(tm) < 1*time.Minute {
 						continue
 					}
 

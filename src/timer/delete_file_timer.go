@@ -37,6 +37,8 @@ func (s *DeleteFileTimer) Proc() time.Duration {
 		}
 
 		delFiles := []db.FileInfo{}
+		now := time.Now()
+
 		for _, file := range flist {
 			info, err := os.Stat(file.Path)
 			if err != nil {
@@ -47,7 +49,7 @@ func (s *DeleteFileTimer) Proc() time.Duration {
 				continue
 			}
 
-			diff := time.Since(info.ModTime())
+			diff := now.Sub(info.ModTime())
 
 			//修改过系统时间，忽略
 			if diff < 0 {

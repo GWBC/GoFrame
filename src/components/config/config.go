@@ -90,13 +90,13 @@ func (c *Config) initConfig() error {
 			c.FTPInfo.RootPath = "/"
 
 			c.UpLoad.Path = "D:/5.34懒人汉化/RKDevTool_Release_v2.96_zh"
-			c.UpLoad.PackFilter = []string{".exe", ".cfg"}
+			c.UpLoad.PackFilter = []string{}
 			c.UpLoad.PackCount = 10
 			c.UpLoad.PackMaxFile = 200
 			c.UpLoad.ISDelFile = false
 			c.UpLoad.FileRetentionTime = 1
 
-			c.DownLoad.Path = "D:/5.34懒人汉化/RKDevTool_Release_v2.96_zh"
+			c.DownLoad.Path = "D:/5.34懒人汉化/RKDevTool_Release"
 			c.DownLoad.DownMaxFile = 200
 
 			return c.Save()
