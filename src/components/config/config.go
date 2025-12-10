@@ -10,7 +10,9 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const ZIPPassword = "(!@#$%^&*)"
+const ZIPPassword = ""
+
+// const ZIPPassword = "(!@#$%^&*)"
 
 type System struct {
 	Services bool `yaml:"Services"`
@@ -94,7 +96,7 @@ func (c *Config) initConfig() error {
 
 			c.UpLoad.Path = "/root/code/HiSTBLinuxV100R005C00SPC050"
 			c.UpLoad.PackFilter = []string{}
-			c.UpLoad.PackCount = 40
+			c.UpLoad.PackCount = 20
 			c.UpLoad.PackMaxFile = 200
 			c.UpLoad.ISDelFile = false
 			c.UpLoad.FileRetentionTime = 1
