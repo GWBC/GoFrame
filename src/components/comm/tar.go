@@ -161,6 +161,7 @@ func extractFile(reader *tar.Reader, header *tar.Header, targetPath string) erro
 	case tar.TypeReg:
 		return createRegularFile(reader, targetPath, header)
 	case tar.TypeSymlink:
+		os.Remove(targetPath)
 		return os.Symlink(header.Linkname, targetPath)
 	case tar.TypeLink:
 		return createHardLink(targetPath, filepath.Join(filepath.Dir(targetPath), header.Linkname))

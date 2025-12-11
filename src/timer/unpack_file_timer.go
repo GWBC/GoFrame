@@ -51,15 +51,15 @@ func (u *UnPackeFileTimer) Proc(ctx context.Context) time.Duration {
 					continue
 				}
 
-				zipPath := filepath.Join(u.downPath, file.Name())
-				err := comm.UnTar(zipPath, config.PackPassword, config.Instance.DownLoad.Path)
+				packPath := filepath.Join(u.downPath, file.Name())
+				err := comm.UnTar(packPath, config.PackPassword, config.Instance.DownLoad.Path)
 				if err != nil {
-					log.Sys.Errorf("解压zip文件失败：%s，原因：%s", zipPath, err.Error())
+					log.Sys.Errorf("解压文件失败：%s，原因：%s", packPath, err.Error())
 				}
 
-				os.Remove(zipPath)
+				os.Remove(packPath)
 
-				log.Sys.Debugf("处理压缩文件：%s", zipPath)
+				log.Sys.Debugf("处理压缩文件：%s", packPath)
 			}
 		}
 	}
