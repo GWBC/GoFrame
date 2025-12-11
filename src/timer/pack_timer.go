@@ -96,7 +96,7 @@ func (s *PackTimer) Proc(ctx context.Context) time.Duration {
 				if info.Mode()&os.ModeSymlink != 0 {
 					err = comm.CopySymlink(file.Path, dstPath)
 				} else {
-					_, err = comm.CopyFile(file.Path, dstPath)
+					_, err = comm.CopyFileAndMeta(file.Path, dstPath)
 				}
 
 				if err != nil {
