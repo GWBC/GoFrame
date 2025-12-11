@@ -3,6 +3,7 @@ package service
 import (
 	"GoFrame/src/components/log"
 	"GoFrame/src/message"
+	"context"
 	"sync"
 )
 
@@ -12,13 +13,14 @@ var serviceList = []Service{
 }
 
 var serviceGroup = sync.WaitGroup{}
+var workContext, workCancelFun = context.WithCancel(context.Background())
 
 type Service interface {
 	Enable() bool                    //是否激活
 	Init() error                     //初始化
 	Uninit()                         //卸载
 	Name() string                    //名称
-	Proc()                           //处理
+	Proc(ctx context.Context)        //处理
 	SubMessage() []int               //订阅消息
 	ProcMessage(id int, args ...any) //处理消息
 }
@@ -62,7 +64,7 @@ func Start() error {
 				subMsg[msgID] = message.Sub(msgID, svr.ProcMessage)
 			}
 
-			svr.Proc()
+			svr.Proc(workContext)
 		}(svr)
 	}
 
@@ -70,6 +72,8 @@ func Start() error {
 }
 
 func Stop() {
+	workCancelFun()
+
 	for _, svr := range serviceList {
 		if !svr.Enable() {
 			continue

@@ -4,6 +4,7 @@ import (
 	"GoFrame/src/components/comm"
 	"GoFrame/src/components/config"
 	"GoFrame/src/components/log"
+	"context"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -33,25 +34,28 @@ func (s *DownFileTimer) Name() string {
 	return "下载文件"
 }
 
-func (s *DownFileTimer) Proc() time.Duration {
+func (s *DownFileTimer) Proc(ctx context.Context) time.Duration {
 	ftp := comm.FTP{
 		Addr:     config.Instance.FTPInfo.Addr,
 		User:     config.Instance.FTPInfo.User,
 		Password: config.Instance.FTPInfo.Password,
 	}
 
-	for {
-		if s.isStopDown() {
-			return config.ProcInterval(2)
-		}
+	if s.isStopDown() {
+		return config.ProcInterval(2)
+	}
 
-		fs, err := ftp.FileList(config.Instance.FTPInfo.RootPath)
-		if err != nil {
-			log.Sys.Errorf("获取文件列表失败，原因：%s", err.Error())
-			break
-		}
+	fs, err := ftp.FileList(config.Instance.FTPInfo.RootPath)
+	if err != nil {
+		log.Sys.Errorf("获取文件列表失败，原因：%s", err.Error())
+		return config.ProcInterval(1)
+	}
 
-		for _, file := range fs {
+	for _, file := range fs {
+		select {
+		case <-ctx.Done():
+			return config.ProcInterval(1)
+		default:
 			if s.isStopDown() {
 				return config.ProcInterval(2)
 			}
@@ -91,8 +95,6 @@ func (s *DownFileTimer) Proc() time.Duration {
 			//删除ftp上的文件
 			ftp.Delete(file.Name)
 		}
-
-		break
 	}
 
 	return config.ProcInterval(1)

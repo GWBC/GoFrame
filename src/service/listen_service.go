@@ -4,6 +4,7 @@ import (
 	"GoFrame/src/components/config"
 	"GoFrame/src/components/db"
 	"GoFrame/src/components/log"
+	"context"
 	"os"
 	"path/filepath"
 	"sync"
@@ -34,9 +35,9 @@ func (s *ListenService) Name() string {
 	return "文件监听"
 }
 
-func (s *ListenService) Proc() {
-	s.work()
-	s.watcher.Start(1 * time.Second)
+func (s *ListenService) Proc(ctx context.Context) {
+	s.work(ctx)
+	s.watcher.Start(10 * time.Second)
 	s.wg.Wait()
 }
 
@@ -48,7 +49,7 @@ func (s *ListenService) ProcMessage(id int, args ...any) {
 
 }
 
-func (s *ListenService) work() {
+func (s *ListenService) work(ctx context.Context) {
 	s.wg.Add(1)
 
 	go func() {
@@ -63,6 +64,8 @@ func (s *ListenService) work() {
 
 		for {
 			select {
+			case <-ctx.Done():
+				return
 			case event, ok := <-s.watcher.Event:
 				if !ok {
 					return
@@ -73,8 +76,6 @@ func (s *ListenService) work() {
 				if event.IsDir() {
 					continue
 				}
-
-				log.Sys.Debugf("OP：%v，Path：%s，Old：%s", event.Op, event.Path, event.OldPath)
 
 				switch event.Op {
 				case watcher.Create:
@@ -87,12 +88,21 @@ func (s *ListenService) work() {
 					files[event.Path] = nowTime
 					delFiles = append(delFiles, event.OldPath)
 				}
+			case err := <-s.watcher.Error:
+				log.Sys.Errorf("文件监听发生错误，退出监听，原因：%s", err.Error())
+				return
 			case <-t.C:
 				//执行删除
-				if len(delFiles) != 0 {
-					result := db.Instance.Delete(&db.FileInfo{}, delFiles)
+				const batchSize = 2000
+				for i := 0; i < len(delFiles); i += batchSize {
+					end := i + batchSize
+					if end > len(delFiles) {
+						end = len(delFiles)
+					}
+
+					result := db.Instance.Delete(&db.FileInfo{}, delFiles[i:end])
 					if result.Error != nil {
-						log.Sys.Debugf("删除文件信息失败，原因：%s", result.Error)
+						log.Sys.Debugf("删除文件信息失败，原因：%s", result.Error.Error())
 						continue
 					}
 

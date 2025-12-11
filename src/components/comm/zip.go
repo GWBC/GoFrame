@@ -11,6 +11,8 @@ import (
 	zip "github.com/mzky/zip"
 )
 
+//不支持软连接
+
 func IsZip(fileName string) bool {
 	f, err := os.Open(fileName)
 	if err != nil {

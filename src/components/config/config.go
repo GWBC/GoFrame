@@ -10,9 +10,9 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-//const ZIPPassword = ""
+//const PackPassword = ""
 
-const ZIPPassword = "(!@#$%^&*)"
+const PackPassword = "(!@#$%^&*)"
 
 type System struct {
 	Services bool `yaml:"Services"`

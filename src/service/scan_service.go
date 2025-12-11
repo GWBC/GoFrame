@@ -5,6 +5,7 @@ import (
 	"GoFrame/src/components/config"
 	"GoFrame/src/components/db"
 	"GoFrame/src/components/log"
+	"context"
 	"io/fs"
 	"path/filepath"
 	"sync"
@@ -66,14 +67,20 @@ func (s *ScanService) Name() string {
 	return "文件扫描"
 }
 
-func (s *ScanService) Proc() {
+func (s *ScanService) Proc(ctx context.Context) {
 	d := 10 * time.Second
 	t := time.NewTimer(d)
 	defer t.Stop()
 
 	for {
 		select {
-		case files := <-s.filesChan:
+		case <-ctx.Done():
+			return
+		case files, ok := <-s.filesChan:
+			if !ok {
+				return
+			}
+
 			result := db.Instance.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "path"}},
 				DoUpdates: clause.Assignments(map[string]any{
 					"flag": clause.Expr{SQL: `

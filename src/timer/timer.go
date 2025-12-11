@@ -12,18 +12,18 @@ var timers = []Timer{
 	&DeleteFileTimer{},
 	&UploadFTPTimer{},
 	&DownFileTimer{},
-	&UnzipFileTimer{},
+	&UnPackeFileTimer{},
 }
 
 var timerGroup = sync.WaitGroup{}
 var timerCtx, timerCancelFun = context.WithCancel(context.Background())
 
 type Timer interface {
-	Enable() bool        //是否激活
-	Init() error         //初始化
-	Uninit()             //卸载
-	Name() string        //名称
-	Proc() time.Duration //处理
+	Enable() bool                           //是否激活
+	Init() error                            //初始化
+	Uninit()                                //卸载
+	Name() string                           //名称
+	Proc(ctx context.Context) time.Duration //处理
 }
 
 func Start() error {
@@ -53,7 +53,7 @@ func Start() error {
 				timerGroup.Done()
 			}()
 
-			d := svr.Proc()
+			d := svr.Proc(timerCtx)
 			if d < 0 {
 				return
 			}
@@ -66,7 +66,7 @@ func Start() error {
 				case <-timerCtx.Done():
 					return
 				case <-tr.C:
-					d = svr.Proc()
+					d = svr.Proc(timerCtx)
 					if d < 0 {
 						return
 					}

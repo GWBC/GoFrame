@@ -1,6 +1,9 @@
 package comm
 
-import "os"
+import (
+	"os"
+	"path/filepath"
+)
 
 func FileCount(dir string) (int, error) {
 	entries, err := os.ReadDir(dir)
@@ -18,4 +21,15 @@ func FileCount(dir string) (int, error) {
 	}
 
 	return count, nil
+}
+
+func CopySymlink(src, dst string) error {
+	os.MkdirAll(filepath.Dir(dst), 0755)
+
+	target, err := os.Readlink(src)
+	if err != nil {
+		return err
+	}
+
+	return os.Symlink(target, dst)
 }
