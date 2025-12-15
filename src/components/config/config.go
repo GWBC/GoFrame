@@ -48,7 +48,7 @@ type DownLoad struct {
 }
 
 type Config struct {
-	System       System   `yaml:"System"`
+	System       System   `yaml:"-"`
 	Log          Log      `yaml:"Log"`
 	ProcInterval int      `yaml:"ProcInterval"` //处理间隔，单位秒
 	PackPrefix   string   `yaml:"PackPrefix"`
@@ -89,19 +89,19 @@ func (c *Config) initConfig() error {
 			c.ProcInterval = 10
 			c.PackPrefix = "file"
 
-			c.FTPInfo.Addr = "172.16.100.223:21"
-			c.FTPInfo.User = "zhang"
-			c.FTPInfo.Password = "zhang"
+			c.FTPInfo.Addr = ""
+			c.FTPInfo.User = ""
+			c.FTPInfo.Password = ""
 			c.FTPInfo.RootPath = "/"
 
-			c.UpLoad.Path = "/root/code/HiSTBLinuxV100R005C00SPC050"
+			c.UpLoad.Path = ""
 			c.UpLoad.PackFilter = []string{}
 			c.UpLoad.PackCount = 20
 			c.UpLoad.PackMaxFile = 200
 			c.UpLoad.ISDelFile = false
 			c.UpLoad.FileRetentionTime = 1
 
-			c.DownLoad.Path = "/root/code/HiSTBLinuxV100R005C00SPC050_back"
+			c.DownLoad.Path = ""
 			c.DownLoad.DownMaxFile = 200
 
 			return c.Save()
