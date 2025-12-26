@@ -35,6 +35,7 @@ type FTPInfo struct {
 
 type UpLoad struct {
 	Path              string   `yaml:"Path"`              //同步目录
+	IgnoreSuffix      []string `yaml:"IgnoreSuffix"`      //忽略后缀，例子：.up
 	PackFilter        []string `yaml:"PackFilter"`        //打包过滤器，文件后缀，例子：.mp4
 	PackCount         int      `yaml:"PackCount"`         //打包个数
 	PackMaxFile       int      `yaml:"PackMaxFile"`       //打包目录下最大文件数

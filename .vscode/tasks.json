@@ -5,7 +5,7 @@
       "type": "go",
       "label": "window",
       "command": "build",
-      "args": ["-o", "${workspaceFolder}/bin/goframe.exe"],
+      "args": ["-o", "${workspaceFolder}/bin/file_sync.exe"],
       "problemMatcher": ["$go"],
       "group": "build",
       "presentation": {
@@ -27,7 +27,7 @@
       "type": "go",
       "label": "linux",
       "command": "build",
-      "args": ["-o", "${workspaceFolder}/bin/goframe"],
+      "args": ["-o", "${workspaceFolder}/bin/file_sync"],
       "problemMatcher": ["$go"],
       "group": "build",
       "presentation": {

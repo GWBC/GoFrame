@@ -8,6 +8,7 @@ import (
 	"context"
 	"io/fs"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -38,9 +39,23 @@ func (s *ScanService) Init() error {
 		finfo := db.FileInfo{}
 		finfo.Path = path
 		finfo.Name = filepath.Base(path)
-		finfo.Ext = filepath.Ext(path)
 		finfo.ModifyAt = info.ModTime()
 		finfo.Flag = 0
+		finfo.Ext = filepath.Ext(path)
+
+		//处理忽略后缀
+		for _, suffix := range config.Instance.UpLoad.IgnoreSuffix {
+			if !strings.HasSuffix(path, suffix) {
+				continue
+			}
+
+			finfo.Ext = filepath.Ext(strings.TrimSuffix(path, suffix))
+			break
+		}
+
+		if len(finfo.Ext) == 0 {
+			finfo.Ext = "unknown"
+		}
 
 		if len(s.files) >= s.batchCount {
 			s.lock.Lock()

@@ -7,6 +7,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -132,9 +133,23 @@ func (s *ListenService) work(ctx context.Context) {
 					info := &db.FileInfo{}
 					info.Path = file
 					info.Name = filepath.Base(info.Path)
-					info.Ext = filepath.Ext(info.Path)
 					info.ModifyAt = finfo.ModTime()
 					info.Flag = 0
+					info.Ext = filepath.Ext(info.Path)
+
+					//处理忽略后缀
+					for _, suffix := range config.Instance.UpLoad.IgnoreSuffix {
+						if !strings.HasSuffix(info.Path, suffix) {
+							continue
+						}
+
+						info.Ext = filepath.Ext(strings.TrimSuffix(info.Path, suffix))
+						break
+					}
+
+					if len(info.Ext) == 0 {
+						info.Ext = "unknown"
+					}
 
 					result := db.Instance.Save(info)
 					if result.Error != nil {
