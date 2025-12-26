@@ -15,7 +15,8 @@ import (
 const PackPassword = "(!@#$%^&*)"
 
 type System struct {
-	Services bool `yaml:"Services"`
+	Version  string `yaml:"-"`
+	Services bool   `yaml:"Services"`
 }
 
 type Log struct {
@@ -144,6 +145,8 @@ var Instance = instance.Instance(func() *Config {
 	if err != nil {
 		panic("初始化配置失败，原因：" + err.Error())
 	}
+
+	obj.System.Version = "v1.0.0.2"
 
 	return &obj
 })
